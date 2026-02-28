@@ -2,24 +2,50 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Call seeders in proper order
+        $this->call(RoleSeeder::class);
+        $this->call(ArticleStatusSeeder::class);
+        $this->call(CategorySeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create a writer user (idempotent)
+        $writer = User::firstOrCreate(
+            ['email' => 'writer@example.com'],
+            [
+                'name' => 'John Writer',
+                'password' => bcrypt('password'),
+            ]
+        );
+        // Sync role to avoid duplicate role assignments
+        $writer->syncRoles(['writer']);
+
+        // Create an editor user (idempotent)
+        $editor = User::firstOrCreate(
+            ['email' => 'editor@example.com'],
+            [
+                'name' => 'Jane Editor',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $editor->syncRoles(['editor']);
+
+        // Create a student user (idempotent)
+        $student = User::firstOrCreate(
+            ['email' => 'student@example.com'],
+            [
+                'name' => 'Bob Student',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $student->syncRoles(['student']);
     }
 }
