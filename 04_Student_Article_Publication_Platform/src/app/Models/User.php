@@ -2,47 +2,61 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Get articles written by this user
      */
-    protected function casts(): array
+    public function writtenArticles(): HasMany
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Article::class, 'writer_id');
+    }
+
+    /**
+     * Get articles edited by this user
+     */
+    public function editedArticles(): HasMany
+    {
+        return $this->hasMany(Article::class, 'editor_id');
+    }
+
+    /**
+     * Get revisions created by this user
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(Revision::class, 'editor_id');
+    }
+
+    /**
+     * Get comments created by this user
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'student_id');
     }
 }
