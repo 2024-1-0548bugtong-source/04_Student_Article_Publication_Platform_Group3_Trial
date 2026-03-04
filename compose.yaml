@@ -12,6 +12,7 @@ services:
       - mailtrap_network
     volumes:
       - ./_setup/web_scripts:/scripts
+      - ./_setup/web_scripts/apache.conf:/etc/apache2/sites-available/000-default.conf
       - ./src:/var/www/html
       - ./docker_home:/home/developer    # HOME for npm & node
     depends_on:
