@@ -4,20 +4,26 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WriterController;
 use App\Http\Controllers\EditorController;
 use App\Http\Controllers\StudentController;
-use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return Inertia::render('Welcome');
 });
 
 Route::get('/dashboard', function () {
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+    if ($user->hasRole('writer')) {
+        return redirect()->route('writer.dashboard');
+    }
+    if ($user->hasRole('editor')) {
+        return redirect()->route('editor.dashboard');
+    }
+    if ($user->hasRole('student')) {
+        return redirect()->route('student.dashboard');
+    }
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -72,6 +78,7 @@ Route::middleware(['auth', 'role:editor'])->prefix('editor')->group(function () 
     Route::get('/articles/{article}/review', [EditorController::class, 'review'])->name('editor.review');
     Route::post('/articles/{article}/revision', [EditorController::class, 'requestRevision'])->name('articles.revision');
     Route::post('/articles/{article}/publish', [EditorController::class, 'publish'])->name('articles.publish');
+    Route::patch('/articles/{article}/content', [EditorController::class, 'updateContent'])->name('editor.updateContent');
 });
 
 // Student routes

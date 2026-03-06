@@ -1,9 +1,17 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import {
+    Box,
+    Button,
+    FormControl,
+    FormHelperText,
+    InputLabel,
+    MenuItem,
+    Select,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -11,11 +19,11 @@ export default function Register() {
         email: '',
         password: '',
         password_confirmation: '',
+        role: 'student',
     });
 
     const submit = (e) => {
         e.preventDefault();
-
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
@@ -25,96 +33,92 @@ export default function Register() {
         <GuestLayout>
             <Head title="Register" />
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+            <Typography variant="h5" align="center" gutterBottom fontWeight="bold">
+                Create Account
+            </Typography>
 
-                    <TextInput
-                        id="name"
-                        name="name"
+            <Box component="form" onSubmit={submit}>
+                <Stack spacing={2}>
+                    <TextField
+                        label="Full Name"
                         value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
                         onChange={(e) => setData('name', e.target.value)}
+                        error={!!errors.name}
+                        helperText={errors.name}
+                        fullWidth
+                        autoFocus
+                        autoComplete="name"
                         required
                     />
 
-                    <InputError message={errors.name} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
+                    <TextField
+                        label="Email Address"
                         type="email"
-                        name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
+                        error={!!errors.email}
+                        helperText={errors.email}
+                        fullWidth
+                        autoComplete="username"
                         required
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
+                    <TextField
+                        label="Password"
                         type="password"
-                        name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
                         onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
+                        error={!!errors.password}
+                        helperText={errors.password}
+                        fullWidth
                         autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
                         required
                     />
 
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
+                    <TextField
+                        label="Confirm Password"
+                        type="password"
+                        value={data.password_confirmation}
+                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                        error={!!errors.password_confirmation}
+                        helperText={errors.password_confirmation}
+                        fullWidth
+                        autoComplete="new-password"
+                        required
                     />
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    <FormControl fullWidth error={!!errors.role} required>
+                        <InputLabel>Register as</InputLabel>
+                        <Select
+                            value={data.role}
+                            onChange={(e) => setData('role', e.target.value)}
+                            label="Register as"
+                        >
+                            <MenuItem value="student">Student (read &amp; comment)</MenuItem>
+                            <MenuItem value="writer">Writer (write &amp; submit articles)</MenuItem>
+                            <MenuItem value="editor">Editor (review &amp; publish articles)</MenuItem>
+                        </Select>
+                        {errors.role && <FormHelperText>{errors.role}</FormHelperText>}
+                    </FormControl>
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                        disabled={processing}
+                        size="large"
                     >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
                         Register
-                    </PrimaryButton>
-                </div>
-            </form>
+                    </Button>
+
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Link href={route('login')} style={{ fontSize: 14, color: '#064E3B' }}>
+                            Already have an account? Sign in
+                        </Link>
+                    </Box>
+                </Stack>
+            </Box>
         </GuestLayout>
     );
 }
+

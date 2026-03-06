@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\ArticleStatus;
 use App\Models\Comment;
+use App\Notifications\CommentPostedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,11 +14,6 @@ use Inertia\Response;
 
 class StudentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'role:student']);
-    }
-
     /**
      * Show student dashboard with published articles
      */
@@ -64,11 +60,13 @@ class StudentController extends Controller
             'content' => 'required|string|max:1000',
         ]);
 
-        Comment::create([
+        $comment = Comment::create([
             'article_id' => $article->id,
             'student_id' => Auth::id(),
             'content' => $validated['content'],
         ]);
+
+        $article->writer->notify(new CommentPostedNotification($comment->load(['article', 'student'])));
 
         return redirect()->route('student.show', $article)->with('success', 'Comment posted successfully.');
     }

@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\ArticleStatus;
 use App\Models\Category;
 use App\Models\User;
+use App\Notifications\ArticleSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,11 +15,6 @@ use Inertia\Response;
 
 class WriterController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'role:writer']);
-    }
-
     /**
      * Show writer dashboard
      */
@@ -85,7 +81,7 @@ class WriterController extends Controller
         $categories = Category::all(['id', 'name']);
 
         return Inertia::render('Writer/EditArticle', [
-            'article' => $article->load(['status', 'category']),
+            'article' => $article->load(['status', 'category', 'revisions']),
             'categories' => $categories,
         ]);
     }
@@ -125,6 +121,11 @@ class WriterController extends Controller
         $article->update([
             'status_id' => $submittedStatus->id,
         ]);
+
+        $editors = User::role('editor')->get();
+        foreach ($editors as $editor) {
+            $editor->notify(new ArticleSubmittedNotification($article->load(['writer', 'category'])));
+        }
 
         return redirect()->route('writer.dashboard')->with('success', 'Article submitted for review.');
     }

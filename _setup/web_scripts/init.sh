@@ -59,11 +59,10 @@ php artisan key:generate
 # Clear caches, install Telescope, then run migrations with seeding
 php artisan config:clear
 
-# Remove any previously generated telescope migration to avoid duplicates
-rm -f $WORKDIR/database/migrations/*create_telescope_entries_table.php
-
-# Install Telescope (generates migration) BEFORE running migrate
-php artisan telescope:install || echo "Telescope already installed"
+# Install Telescope only if its migration hasn't been published yet
+if ! ls $WORKDIR/database/migrations/*create_telescope_entries_table.php 1>/dev/null 2>&1; then
+    php artisan telescope:install || echo "Telescope already installed"
+fi
 
 php artisan migrate --force
 php artisan db:seed --force

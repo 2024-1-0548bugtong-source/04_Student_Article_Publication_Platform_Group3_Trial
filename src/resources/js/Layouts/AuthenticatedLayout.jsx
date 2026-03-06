@@ -1,176 +1,268 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
+import {
+    AppBar,
+    Avatar,
+    Box,
+    Divider,
+    Drawer,
+    IconButton,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
+    Stack,
+    Toolbar,
+    Typography,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import ArticleIcon from '@mui/icons-material/Article';
+import RateReviewIcon from '@mui/icons-material/RateReview';
+import PublishIcon from '@mui/icons-material/Publish';
+import CommentIcon from '@mui/icons-material/Comment';
+import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
+import SchoolIcon from '@mui/icons-material/School';
+
+const DRAWER_WIDTH = 260;
+
+function getSidebarItems(roles) {
+    if (roles?.includes('writer')) {
+        return [
+            { label: 'Dashboard', href: route('writer.dashboard'), icon: <DashboardIcon />, active: route().current('writer.dashboard') },
+            { label: 'Create Article', href: route('articles.create'), icon: <AddCircleIcon />, active: route().current('articles.create') },
+        ];
+    }
+    if (roles?.includes('editor')) {
+        return [
+            { label: 'Dashboard', href: route('editor.dashboard'), icon: <DashboardIcon />, active: route().current('editor.dashboard') },
+        ];
+    }
+    if (roles?.includes('student')) {
+        return [
+            { label: 'Published Articles', href: route('student.dashboard'), icon: <ArticleIcon />, active: route().current('student.dashboard') },
+        ];
+    }
+    return [
+        { label: 'Dashboard', href: route('dashboard'), icon: <DashboardIcon />, active: route().current('dashboard') },
+    ];
+}
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const { auth } = usePage().props;
+    const user = auth.user;
+    const roles = user?.roles ?? [];
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState(null);
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const sidebarItems = getSidebarItems(roles);
+    const roleName = roles[0] ? roles[0].charAt(0).toUpperCase() + roles[0].slice(1) : 'User';
+
+    const drawerContent = (
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Brand */}
+            <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <SchoolIcon sx={{ fontSize: 32, color: '#FAFAF9' }} />
+                <Box>
+                    <Typography variant="subtitle1" sx={{ color: '#FAFAF9', fontWeight: 700, lineHeight: 1.2 }}>
+                        Highland
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(250,250,249,0.7)', fontWeight: 500 }}>
+                        Scholar
+                    </Typography>
+                </Box>
+            </Box>
+
+            <Divider sx={{ borderColor: 'rgba(250,250,249,0.15)' }} />
+
+            {/* Role Badge */}
+            <Box sx={{ px: 2.5, py: 1.5 }}>
+                <Typography variant="overline" sx={{ color: 'rgba(250,250,249,0.5)', letterSpacing: 1.5, fontSize: 10 }}>
+                    {roleName} Panel
+                </Typography>
+            </Box>
+
+            {/* Nav Items  */}
+            <List sx={{ px: 1.5, flexGrow: 1 }}>
+                {sidebarItems.map((item) => (
+                    <ListItem key={item.label} disablePadding sx={{ mb: 0.5 }}>
+                        <ListItemButton
+                            component={Link}
+                            href={item.href}
+                            selected={item.active}
+                            sx={{
+                                borderRadius: 2,
+                                color: 'rgba(250,250,249,0.8)',
+                                '&:hover': {
+                                    bgcolor: 'rgba(250,250,249,0.1)',
+                                    color: '#FAFAF9',
+                                },
+                                '&.Mui-selected': {
+                                    bgcolor: 'rgba(250,250,249,0.15)',
+                                    color: '#FAFAF9',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(250,250,249,0.2)',
+                                    },
+                                },
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+                                {item.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                                primary={item.label}
+                                primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
+                            />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
+
+            <Divider sx={{ borderColor: 'rgba(250,250,249,0.15)' }} />
+
+            {/* User Info */}
+            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Avatar sx={{ width: 34, height: 34, bgcolor: '#C2410C', fontSize: 14, fontWeight: 700 }}>
+                    {user?.name?.[0]?.toUpperCase()}
+                </Avatar>
+                <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#FAFAF9', fontWeight: 600 }} noWrap>
+                        {user?.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(250,250,249,0.6)' }} noWrap>
+                        {user?.email}
+                    </Typography>
+                </Box>
+            </Box>
+        </Box>
+    );
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
-                                </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+            {/* Sidebar – permanent on desktop, drawer on mobile */}
+            <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
+                {/* Mobile drawer */}
+                <Drawer
+                    variant="temporary"
+                    open={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    ModalProps={{ keepMounted: true }}
+                    sx={{
+                        display: { xs: 'block', md: 'none' },
+                        '& .MuiDrawer-paper': {
+                            width: DRAWER_WIDTH,
+                            bgcolor: '#064E3B',
+                            borderRight: 'none',
+                        },
+                    }}
                 >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
+                    {drawerContent}
+                </Drawer>
+
+                {/* Desktop permanent */}
+                <Drawer
+                    variant="permanent"
+                    sx={{
+                        display: { xs: 'none', md: 'block' },
+                        '& .MuiDrawer-paper': {
+                            width: DRAWER_WIDTH,
+                            bgcolor: '#064E3B',
+                            borderRight: 'none',
+                        },
+                    }}
+                    open
+                >
+                    {drawerContent}
+                </Drawer>
+            </Box>
+
+            {/* Main content area */}
+            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', width: { md: `calc(100% - ${DRAWER_WIDTH}px)` } }}>
+                {/* Top AppBar */}
+                <AppBar
+                    position="sticky"
+                    elevation={0}
+                    sx={{
+                        bgcolor: '#FFFFFF',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                    }}
+                >
+                    <Toolbar>
+                        <IconButton
+                            color="inherit"
+                            edge="start"
+                            onClick={() => setMobileOpen(true)}
+                            sx={{ mr: 2, display: { md: 'none' }, color: 'text.primary' }}
                         >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
+                            <MenuIcon />
+                        </IconButton>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
+                        {header && (
+                            <Box sx={{ flexGrow: 1, color: 'text.primary' }}>
+                                {header}
+                            </Box>
+                        )}
 
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
+                                <Avatar sx={{ width: 34, height: 34, bgcolor: '#064E3B', fontSize: 14, fontWeight: 700 }}>
+                                    {user?.name?.[0]?.toUpperCase()}
+                                </Avatar>
+                            </IconButton>
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={Boolean(anchorEl)}
+                                onClose={() => setAnchorEl(null)}
+                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                                PaperProps={{ sx: { mt: 1, minWidth: 180 } }}
                             >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+                                <MenuItem component={Link} href={route('profile.edit')}>
+                                    <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
+                                    Profile
+                                </MenuItem>
+                                <Divider />
+                                <MenuItem onClick={() => router.post(route('logout'))}>
+                                    <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+                                    Log Out
+                                </MenuItem>
+                            </Menu>
+                        </Stack>
+                    </Toolbar>
+                </AppBar>
 
-            {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
+                {/* Page content */}
+                <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
+                    {children}
+                </Box>
 
-            <main>{children}</main>
-        </div>
+                {/* Footer */}
+                <Box
+                    component="footer"
+                    sx={{
+                        py: 2,
+                        px: 3,
+                        textAlign: 'center',
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: '#FFFFFF',
+                    }}
+                >
+                    <Typography variant="caption" color="text.secondary">
+                        Highland Scholar &copy; {new Date().getFullYear()} &mdash; Student Article Publication Platform
+                    </Typography>
+                </Box>
+            </Box>
+        </Box>
     );
 }

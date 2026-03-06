@@ -56,6 +56,14 @@ class ArticlePolicy
     }
 
     /**
+     * Determine if the user can edit article content (editors only)
+     */
+    public function editContent(User $user, Article $article): bool
+    {
+        return $user->hasRole('editor');
+    }
+
+    /**
      * Determine if the user can delete articles
      */
     public function delete(User $user, Article $article): bool
