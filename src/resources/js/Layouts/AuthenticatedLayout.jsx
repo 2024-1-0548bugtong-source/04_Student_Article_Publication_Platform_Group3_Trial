@@ -39,6 +39,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import SchoolIcon from '@mui/icons-material/School';
 import PeopleIcon from '@mui/icons-material/People';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 const DRAWER_WIDTH = 260;
 
@@ -68,12 +69,14 @@ function getSidebarItems(roles) {
         }
         return [
             { label: 'Published Articles', href: route('student.dashboard'), icon: <ArticleIcon />, active: route().current('student.dashboard') },
+            { label: 'My Suggestions', href: route('student.suggestions'), icon: <LightbulbIcon />, active: route().current('student.suggestions') },
         ];
     }
 
     if (hasStudent) {
         return [
             { label: 'Published Articles', href: route('student.dashboard'), icon: <ArticleIcon />, active: route().current('student.dashboard') },
+            { label: 'My Suggestions', href: route('student.suggestions'), icon: <LightbulbIcon />, active: route().current('student.suggestions') },
         ];
     }
 

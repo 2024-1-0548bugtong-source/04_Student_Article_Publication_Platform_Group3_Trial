@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Review;
 use App\Models\User;
+use App\Models\Suggestion;
 use App\Models\WriterApplication;
 use App\Notifications\CommentPostedNotification;
 use Illuminate\Http\RedirectResponse;
@@ -222,5 +223,58 @@ class StudentController extends Controller
 
         Bookmark::create(['user_id' => $userId, 'article_id' => $article->id]);
         return redirect()->back()->with('success', 'Article bookmarked.');
+    }
+
+    /**
+     * Show the student's suggestions page
+     */
+    public function suggestions(): Response
+    {
+        $suggestions = Suggestion::where('user_id', Auth::id())
+            ->with('category')
+            ->latest()
+            ->paginate(10);
+
+        $categories = Category::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Student/Suggestions', [
+            'suggestions' => $suggestions,
+            'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * Store a new suggestion
+     */
+    public function storeSuggestion(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:2000',
+            'category_id' => 'nullable|exists:categories,id',
+        ]);
+
+        Suggestion::create([
+            'user_id' => Auth::id(),
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'category_id' => $validated['category_id'] ?? null,
+        ]);
+
+        return redirect()->route('student.suggestions')->with('success', 'Your suggestion has been submitted!');
+    }
+
+    /**
+     * Delete a suggestion
+     */
+    public function deleteSuggestion(Suggestion $suggestion): RedirectResponse
+    {
+        if ($suggestion->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $suggestion->delete();
+
+        return redirect()->route('student.suggestions')->with('success', 'Suggestion deleted.');
     }
 }

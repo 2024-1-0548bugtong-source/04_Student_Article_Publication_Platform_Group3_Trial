@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Review;
 use App\Models\Revision;
+use App\Models\Suggestion;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -251,6 +252,50 @@ class DatabaseSeeder extends Seeder
             'student_id' => $student->id,
             'rating' => 4,
             'body' => 'Inspiring read. The time-management advice is especially helpful for student entrepreneurs.',
+        ]);
+
+        // Funny student suggestions
+        $economics = Category::where('name', 'Economics')->first();
+        $technology = Category::where('name', 'Technology')->first();
+        $psychology = Category::where('name', 'Psychology')->first();
+        $science = Category::where('name', 'Science')->first();
+        $philosophy = Category::where('name', 'Philosophy')->first();
+
+        Suggestion::create([
+            'user_id' => $student->id,
+            'category_id' => $economics?->id,
+            'title' => 'How to Scam',
+            'description' => 'Teaches how to scam. For educational purposes only of course. We need to know the enemy to defeat the enemy.',
+        ]);
+        Suggestion::create([
+            'user_id' => $student->id,
+            'category_id' => $technology?->id,
+            'title' => 'How to Hack Your School Wi-Fi',
+            'description' => 'Asking for a friend who definitely does NOT want faster internet during class. Purely academic research.',
+        ]);
+        Suggestion::create([
+            'user_id' => $student->id,
+            'category_id' => $psychology?->id,
+            'title' => 'How to Convince Your Prof to Give You an A',
+            'description' => 'Advanced psychological techniques for grade negotiation. Includes crying strategies and email templates.',
+        ]);
+        Suggestion::create([
+            'user_id' => $student->id,
+            'category_id' => $science?->id,
+            'title' => 'Is Water Really Wet? A Scientific Analysis',
+            'description' => 'This debate has torn friendships apart. We need a peer-reviewed article to settle this once and for all.',
+        ]);
+        Suggestion::create([
+            'user_id' => $student->id,
+            'category_id' => $philosophy?->id,
+            'title' => 'Why Homework Should Be Illegal',
+            'description' => 'A philosophical deep dive into human rights violations. Homework violates the Geneva Convention. Change my mind.',
+        ]);
+        Suggestion::create([
+            'user_id' => $student->id,
+            'category_id' => $technology?->id,
+            'title' => 'Can ChatGPT Write My Thesis?',
+            'description' => 'Exploring the ethics of AI doing my homework. Spoiler: I already tried it and my prof said "nice try."',
         ]);
     }
 }

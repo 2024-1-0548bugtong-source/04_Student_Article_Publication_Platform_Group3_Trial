@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\ArticleStatus;
 use App\Models\Category;
+use App\Models\Suggestion;
 use App\Models\User;
 use App\Notifications\ArticleSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
@@ -27,8 +28,11 @@ class WriterController extends Controller
             ->latest()
             ->paginate(10);
 
+        $suggestions = Suggestion::with(['user', 'category'])->latest()->paginate(5, ['*'], 'suggestions_page');
+
         return Inertia::render('Writer/Dashboard', [
             'articles' => $articles,
+            'suggestions' => $suggestions,
         ]);
     }
 

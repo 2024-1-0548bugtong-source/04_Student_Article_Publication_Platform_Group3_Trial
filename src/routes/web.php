@@ -94,6 +94,9 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->group(function (
     Route::delete('/reviews/{review}', [StudentController::class, 'deleteReview'])->name('student.delete-review');
     Route::post('/apply-writer', [StudentController::class, 'applyForWriter'])->name('student.apply-writer');
     Route::post('/articles/{article}/bookmark', [StudentController::class, 'toggleBookmark'])->name('articles.bookmark');
+    Route::get('/suggestions', [StudentController::class, 'suggestions'])->name('student.suggestions');
+    Route::post('/suggestions', [StudentController::class, 'storeSuggestion'])->name('student.store-suggestion');
+    Route::delete('/suggestions/{suggestion}', [StudentController::class, 'deleteSuggestion'])->name('student.delete-suggestion');
 });
 
 // Admin routes

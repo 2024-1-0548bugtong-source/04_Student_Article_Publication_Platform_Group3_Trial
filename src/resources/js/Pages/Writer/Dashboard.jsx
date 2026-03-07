@@ -4,6 +4,8 @@ import {
     Alert,
     Box,
     Button,
+    Card,
+    CardContent,
     Chip,
     Container,
     IconButton,
@@ -23,6 +25,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import CategoryIcon from '@mui/icons-material/Category';
+import PersonIcon from '@mui/icons-material/Person';
 
 const STATUS_COLORS = {
     Draft: 'default',
@@ -31,7 +36,7 @@ const STATUS_COLORS = {
     Published: 'success',
 };
 
-export default function WriterDashboard({ articles }) {
+export default function WriterDashboard({ articles, suggestions }) {
     const { flash } = usePage().props;
 
     const handleSubmit = (articleId) => {
@@ -188,6 +193,71 @@ export default function WriterDashboard({ articles }) {
                         ))}
                     </Stack>
                 )}
+
+                {/* Student Suggestions Section */}
+                <Box sx={{ mt: 5 }}>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                        <LightbulbIcon sx={{ color: '#C2410C', fontSize: 28 }} />
+                        <Typography variant="h5" component="h2">Student Suggestions</Typography>
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Article topics suggested by students. Use these as inspiration for your next article!
+                    </Typography>
+
+                    {(!suggestions || suggestions.data.length === 0) ? (
+                        <Card elevation={1}>
+                            <CardContent sx={{ py: 4, textAlign: 'center' }}>
+                                <Typography color="text.secondary">No suggestions from students yet.</Typography>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <Stack spacing={2}>
+                            {suggestions.data.map((suggestion) => (
+                                <Card key={suggestion.id} elevation={1} sx={{ borderLeft: '4px solid #C2410C' }}>
+                                    <CardContent>
+                                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                                            <Typography variant="subtitle1" fontWeight="bold">{suggestion.title}</Typography>
+                                            {suggestion.category && (
+                                                <Chip
+                                                    icon={<CategoryIcon />}
+                                                    label={suggestion.category.name}
+                                                    size="small"
+                                                    color="primary"
+                                                    variant="outlined"
+                                                />
+                                            )}
+                                        </Stack>
+                                        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
+                                            {suggestion.description}
+                                        </Typography>
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <PersonIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+                                            <Typography variant="caption" color="text.disabled">
+                                                Suggested by {suggestion.user?.name} &mdash; {new Date(suggestion.created_at).toLocaleDateString()}
+                                            </Typography>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </Stack>
+                    )}
+
+                    {suggestions?.last_page > 1 && (
+                        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+                            {suggestions.links.map((link, i) => (
+                                <Button
+                                    key={i}
+                                    variant={link.active ? 'contained' : 'outlined'}
+                                    size="small"
+                                    disabled={!link.url}
+                                    onClick={() => link.url && router.get(link.url)}
+                                >
+                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                </Button>
+                            ))}
+                        </Stack>
+                    )}
+                </Box>
 
             </Container>
         </AuthenticatedLayout>
