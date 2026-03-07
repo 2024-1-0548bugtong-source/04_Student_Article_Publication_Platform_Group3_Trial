@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\ArticleStatus;
 use App\Models\Category;
 use App\Models\Comment;
+use App\Models\Review;
 use App\Models\Revision;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
      * +----------------------+------------------+----------+
      * | Email                | Name             | Role     |
      * +----------------------+------------------+----------+
+     * | admin@example.com    | Admin User       | admin    |
      * | writer@example.com   | John Writer      | writer   |
      * | editor@example.com   | Jane Editor      | editor   |
      * | student@example.com  | Bob Student      | student  |
@@ -223,6 +225,32 @@ class DatabaseSeeder extends Seeder
             'article_id' => $pub2->id,
             'editor_id' => $editor->id,
             'feedback' => 'Consider including specific temperature data and mentioning the Paris Accord for context.',
+        ]);
+
+        // Add reviews with ratings on published articles
+        Review::create([
+            'article_id' => $pub1->id,
+            'student_id' => $student->id,
+            'rating' => 5,
+            'body' => 'Excellent beginner guide! The explanation of frontend vs backend is very clear and easy to follow.',
+        ]);
+        Review::create([
+            'article_id' => $pub2->id,
+            'student_id' => $student->id,
+            'rating' => 4,
+            'body' => 'Very informative article. I learned a lot about greenhouse gases and climate data.',
+        ]);
+        Review::create([
+            'article_id' => $pub3->id,
+            'student_id' => $student->id,
+            'rating' => 5,
+            'body' => 'Practical tips that I can actually apply to my daily routine. Highly recommended!',
+        ]);
+        Review::create([
+            'article_id' => $pub4->id,
+            'student_id' => $student->id,
+            'rating' => 4,
+            'body' => 'Inspiring read. The time-management advice is especially helpful for student entrepreneurs.',
         ]);
     }
 }

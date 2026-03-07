@@ -21,20 +21,24 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'approved'   => \App\Http\Middleware\EnsureUserIsApproved::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (UnauthorizedException $e, $request) {
             $user = $request->user();
             if ($user) {
+                if ($user->hasRole('admin')) {
+                    return redirect()->route('admin.dashboard');
+                }
+                if ($user->hasRole('student')) {
+                    return redirect()->route('student.dashboard');
+                }
                 if ($user->hasRole('writer')) {
                     return redirect()->route('writer.dashboard');
                 }
                 if ($user->hasRole('editor')) {
                     return redirect()->route('editor.dashboard');
-                }
-                if ($user->hasRole('student')) {
-                    return redirect()->route('student.dashboard');
                 }
             }
             return redirect()->route('login');

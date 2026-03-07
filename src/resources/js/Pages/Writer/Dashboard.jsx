@@ -22,6 +22,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const STATUS_COLORS = {
     Draft: 'default',
@@ -116,6 +117,18 @@ export default function WriterDashboard({ articles }) {
                                         </TableCell>
                                         <TableCell align="right">
                                             <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                {article.status?.name === 'Published' && (
+                                                    <Tooltip title="View Feedback">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="info"
+                                                            component={Link}
+                                                            href={route('writer.showArticle', article.id)}
+                                                        >
+                                                            <VisibilityIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
                                                 {canEdit(article.status?.name) && (
                                                     <Tooltip title="Edit Article">
                                                         <IconButton

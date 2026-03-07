@@ -20,6 +20,7 @@ class RoleSeeder extends Seeder
             'publish_article',
             'comment_article',
             'delete_own_article',
+            'manage_users',
         ];
 
         foreach ($permissions as $permission) {
@@ -28,6 +29,13 @@ class RoleSeeder extends Seeder
                 ['guard_name' => 'web']
             );
         }
+
+        // Create Admin role
+        $admin = Role::firstOrCreate(
+            ['name' => 'admin', 'guard_name' => 'web'],
+            ['name' => 'admin', 'guard_name' => 'web']
+        );
+        $admin->syncPermissions(['manage_users']);
 
         // Create Writer role
         $writer = Role::firstOrCreate(
