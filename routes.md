@@ -60,3 +60,31 @@ Guarantees one user per role:
 | writer@example.com  | John Writer | writer  | password |
 | editor@example.com  | Jane Editor | editor  | password |
 | student@example.com | Bob Student | student | password |
+
+Email Testing with Mailpit
+
+1. Visit http://localhost:8025
+2. All emails sent during development are captured here
+3. Perfect for testing email notifications without external SMTP
+
+## Debugging with Telescope
+
+1. Visit http://localhost:8000/telescope
+2. View all requests, queries, cache, mail, and exceptions
+3. Essential for development debugging
+
+## Production Deployment Notes
+
+For production with real Mailtrap:
+1. Update `src/.env` with actual Mailtrap credentials
+2. Set `APP_ENV=production`
+3. Set `TELESCOPE_ENABLED=false`
+4. Use proper MySQL credentials
+5. Configure backups for data volume
+
+
+
+### Sample Routes
+- ✅ GET `/sample/email` → SampleController@testEmail
+- ✅ GET `/sample/jodit-editor` → SampleController@testJoditEditor
+- ✅ GET `/sample/assigning-roles` → SampleController@assigningRoles
