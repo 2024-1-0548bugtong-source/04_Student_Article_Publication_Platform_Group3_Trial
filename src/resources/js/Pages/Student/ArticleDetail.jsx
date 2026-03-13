@@ -10,6 +10,7 @@ import {
     Divider,
     IconButton,
     Paper,
+    Rating,
     Stack,
     TextField,
     Tooltip,
@@ -17,15 +18,27 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
+import StarIcon from '@mui/icons-material/Star';
+import { useState } from 'react';
 
-export default function ArticleDetail({ article }) {
+export default function ArticleDetail({ article, userReview }) {
     const { flash, auth } = usePage().props;
-    const { data, setData, post, processing, errors, reset } = useForm({ content: '' });
+
+    // Comment form
+    const commentForm = useForm({ content: '' });
+
+    // Review form
+    const reviewForm = useForm({
+        rating: userReview?.rating || 0,
+        body: userReview?.body || '',
+    });
+
+    const [hoverRating, setHoverRating] = useState(-1);
 
     const handleComment = (e) => {
         e.preventDefault();
-        post(route('articles.comment', article.id), {
-            onSuccess: () => reset('content'),
+        commentForm.post(route('articles.comment', article.id), {
+            onSuccess: () => commentForm.reset('content'),
         });
     };
 
@@ -34,6 +47,23 @@ export default function ArticleDetail({ article }) {
             router.delete(route('student.delete-comment', commentId));
         }
     };
+
+    const handleReview = (e) => {
+        e.preventDefault();
+        reviewForm.post(route('articles.review', article.id));
+    };
+
+    const handleDeleteReview = (reviewId) => {
+        if (confirm('Delete your review?')) {
+            router.delete(route('student.delete-review', reviewId));
+        }
+    };
+
+    // Calculate average rating
+    const reviews = article.reviews || [];
+    const avgRating = reviews.length > 0
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)
+        : 0;
 
     return (
         <AuthenticatedLayout
@@ -67,10 +97,19 @@ export default function ArticleDetail({ article }) {
                         {article.title}
                     </Typography>
 
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         By <strong>{article.writer?.name}</strong> &bull;{' '}
                         {new Date(article.updated_at).toLocaleDateString()}
                     </Typography>
+
+                    {reviews.length > 0 && (
+                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
+                            <Rating value={avgRating} precision={0.1} readOnly size="small" />
+                            <Typography variant="body2" color="text.secondary">
+                                {avgRating.toFixed(1)} ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+                            </Typography>
+                        </Stack>
+                    )}
 
                     <Divider sx={{ mb: 3 }} />
 
@@ -82,7 +121,120 @@ export default function ArticleDetail({ article }) {
                     />
                 </Paper>
 
-                {/* Comments */}
+                {/* Reviews Section */}
+                <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                        <StarIcon color="warning" />
+                        <Typography variant="h5">
+                            Reviews ({reviews.length})
+                        </Typography>
+                    </Stack>
+                    {reviews.length > 0 && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Average rating: {avgRating.toFixed(1)} / 5
+                        </Typography>
+                    )}
+                    <Divider sx={{ mb: 3 }} />
+
+                    {/* Existing reviews */}
+                    {reviews.length === 0 ? (
+                        <Typography color="text.secondary" sx={{ mb: 3 }}>
+                            No reviews yet. Be the first to review this article!
+                        </Typography>
+                    ) : (
+                        <Stack spacing={2} sx={{ mb: 3 }}>
+                            {reviews.map((review) => (
+                                <Box key={review.id}>
+                                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                                        <Avatar sx={{ width: 36, height: 36, bgcolor: 'warning.main', fontSize: 14 }}>
+                                            {review.student?.name?.[0]?.toUpperCase()}
+                                        </Avatar>
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                <Typography variant="subtitle2">
+                                                    {review.student?.name}
+                                                    <Typography
+                                                        component="span"
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                        sx={{ ml: 1 }}
+                                                    >
+                                                        {new Date(review.created_at).toLocaleDateString()}
+                                                    </Typography>
+                                                </Typography>
+                                                {auth.user?.id === review.student_id && (
+                                                    <Tooltip title="Delete review">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDeleteReview(review.id)}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+                                            </Stack>
+                                            <Rating value={review.rating} readOnly size="small" sx={{ mt: 0.5 }} />
+                                            {review.body && (
+                                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                                    {review.body}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Stack>
+                                    <Divider sx={{ mt: 2 }} />
+                                </Box>
+                            ))}
+                        </Stack>
+                    )}
+
+                    {/* Post / update a review */}
+                    <Box component="form" onSubmit={handleReview}>
+                        <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+                            {userReview ? 'Update Your Review' : 'Write a Review'}
+                        </Typography>
+                        <Stack spacing={2}>
+                            <Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                    Your rating
+                                </Typography>
+                                <Rating
+                                    value={reviewForm.data.rating}
+                                    onChange={(e, newValue) => reviewForm.setData('rating', newValue)}
+                                    onChangeActive={(e, newHover) => setHoverRating(newHover)}
+                                    size="large"
+                                />
+                                {reviewForm.errors.rating && (
+                                    <Typography variant="caption" color="error">
+                                        {reviewForm.errors.rating}
+                                    </Typography>
+                                )}
+                            </Box>
+                            <TextField
+                                label="Your review (optional)"
+                                multiline
+                                rows={3}
+                                value={reviewForm.data.body}
+                                onChange={(e) => reviewForm.setData('body', e.target.value)}
+                                error={!!reviewForm.errors.body}
+                                helperText={reviewForm.errors.body}
+                                fullWidth
+                            />
+                            <Box>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="warning"
+                                    disabled={reviewForm.processing || !reviewForm.data.rating}
+                                >
+                                    {userReview ? 'Update Review' : 'Submit Review'}
+                                </Button>
+                            </Box>
+                        </Stack>
+                    </Box>
+                </Paper>
+
+                {/* Comments Section */}
                 <Paper elevation={2} sx={{ p: 3 }}>
                     <Typography variant="h5" gutterBottom>
                         Comments ({article.comments?.length ?? 0})
@@ -148,17 +300,17 @@ export default function ArticleDetail({ article }) {
                                 label="Your comment"
                                 multiline
                                 rows={3}
-                                value={data.content}
-                                onChange={(e) => setData('content', e.target.value)}
-                                error={!!errors.content}
-                                helperText={errors.content}
+                                value={commentForm.data.content}
+                                onChange={(e) => commentForm.setData('content', e.target.value)}
+                                error={!!commentForm.errors.content}
+                                helperText={commentForm.errors.content}
                                 fullWidth
                             />
                             <Box>
                                 <Button
                                     type="submit"
                                     variant="contained"
-                                    disabled={processing}
+                                    disabled={commentForm.processing}
                                 >
                                     Post Comment
                                 </Button>

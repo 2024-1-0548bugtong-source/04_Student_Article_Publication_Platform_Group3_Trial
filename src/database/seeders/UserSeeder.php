@@ -14,6 +14,7 @@ class UserSeeder extends Seeder
      * +-----------------------+------------------+----------+
      * | Email                 | Name             | Role     |
      * +-----------------------+------------------+----------+
+     * | admin@example.com     | Admin User       | admin    |
      * | writer@example.com    | John Writer      | writer   |
      * | editor@example.com    | Jane Editor      | editor   |
      * | student@example.com   | Bob Student      | student  |
@@ -22,12 +23,24 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create an admin user (idempotent)
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+                'is_approved' => true,
+            ]
+        );
+        $admin->syncRoles(['admin']);
+
         // Create a writer user (idempotent)
         $writer = User::firstOrCreate(
             ['email' => 'writer@example.com'],
             [
                 'name' => 'John Writer',
                 'password' => bcrypt('password'),
+                'is_approved' => true,
             ]
         );
         $writer->syncRoles(['writer']);
@@ -38,6 +51,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Jane Editor',
                 'password' => bcrypt('password'),
+                'is_approved' => true,
             ]
         );
         $editor->syncRoles(['editor']);
@@ -48,6 +62,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Bob Student',
                 'password' => bcrypt('password'),
+                'is_approved' => true,
             ]
         );
         $student->syncRoles(['student']);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\ArticleStatus;
 use App\Models\Category;
+use App\Models\Suggestion;
 use App\Models\User;
 use App\Notifications\ArticleSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
@@ -27,8 +28,11 @@ class WriterController extends Controller
             ->latest()
             ->paginate(10);
 
+        $suggestions = Suggestion::with(['user', 'category'])->latest()->paginate(5, ['*'], 'suggestions_page');
+
         return Inertia::render('Writer/Dashboard', [
             'articles' => $articles,
+            'suggestions' => $suggestions,
         ]);
     }
 
@@ -140,5 +144,23 @@ class WriterController extends Controller
         $article->delete();
 
         return redirect()->route('writer.dashboard')->with('success', 'Article deleted successfully.');
+    }
+
+    /**
+     * View a published article with reviews and comments
+     */
+    public function showArticle(Article $article): Response
+    {
+        if ((int) $article->writer_id !== (int) Auth::id()) {
+            abort(403);
+        }
+
+        return Inertia::render('Writer/ArticleView', [
+            'article' => $article->load(['category', 'status', 'comments' => function ($query) {
+                $query->with('student')->latest();
+            }, 'reviews' => function ($query) {
+                $query->with('student')->latest();
+            }]),
+        ]);
     }
 }

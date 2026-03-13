@@ -52,6 +52,11 @@ class Article extends Model
         return $this->hasMany(Comment::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     /**
      * Check if article is published
      */

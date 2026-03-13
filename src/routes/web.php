@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WriterController;
 use App\Http\Controllers\EditorController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -15,14 +16,17 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     /** @var \App\Models\User $user */
     $user = Auth::user();
+    if ($user->hasRole('admin')) {
+        return redirect()->route('admin.dashboard');
+    }
+    if ($user->hasRole('student')) {
+        return redirect()->route('student.dashboard');
+    }
     if ($user->hasRole('writer')) {
         return redirect()->route('writer.dashboard');
     }
     if ($user->hasRole('editor')) {
         return redirect()->route('editor.dashboard');
-    }
-    if ($user->hasRole('student')) {
-        return redirect()->route('student.dashboard');
     }
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -69,8 +73,7 @@ Route::middleware(['auth', 'role:writer'])->prefix('writer')->group(function () 
     Route::get('/articles/{article}/edit', [WriterController::class, 'edit'])->name('articles.edit');
     Route::patch('/articles/{article}', [WriterController::class, 'update'])->name('articles.update');
     Route::post('/articles/{article}/submit', [WriterController::class, 'submit'])->name('articles.submit');
-    Route::delete('/articles/{article}', [WriterController::class, 'destroy'])->name('articles.destroy');
-});
+    Route::delete('/articles/{article}', [WriterController::class, 'destroy'])->name('articles.destroy');    Route::get('/articles/{article}', [WriterController::class, 'showArticle'])->name('writer.showArticle');});
 
 // Editor routes
 Route::middleware(['auth', 'role:editor'])->prefix('editor')->group(function () {
@@ -87,6 +90,22 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->group(function (
     Route::get('/articles/{article}', [StudentController::class, 'show'])->name('student.show');
     Route::post('/articles/{article}/comment', [StudentController::class, 'storeComment'])->name('articles.comment');
     Route::delete('/comments/{comment}', [StudentController::class, 'deleteComment'])->name('student.delete-comment');
+    Route::post('/articles/{article}/review', [StudentController::class, 'storeReview'])->name('articles.review');
+    Route::delete('/reviews/{review}', [StudentController::class, 'deleteReview'])->name('student.delete-review');
+    Route::post('/apply-writer', [StudentController::class, 'applyForWriter'])->name('student.apply-writer');
+    Route::post('/articles/{article}/bookmark', [StudentController::class, 'toggleBookmark'])->name('articles.bookmark');
+    Route::get('/suggestions', [StudentController::class, 'suggestions'])->name('student.suggestions');
+    Route::post('/suggestions', [StudentController::class, 'storeSuggestion'])->name('student.store-suggestion');
+    Route::delete('/suggestions/{suggestion}', [StudentController::class, 'deleteSuggestion'])->name('student.delete-suggestion');
+});
+
+// Admin routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::post('/users/{user}/approve', [AdminController::class, 'approve'])->name('admin.approve');
+    Route::delete('/users/{user}/reject', [AdminController::class, 'reject'])->name('admin.reject');
+    Route::post('/writer-applications/{application}/approve', [AdminController::class, 'approveWriterApplication'])->name('admin.approve-writer-application');
+    Route::post('/writer-applications/{application}/reject', [AdminController::class, 'rejectWriterApplication'])->name('admin.reject-writer-application');
 });
 
 require __DIR__.'/auth.php';

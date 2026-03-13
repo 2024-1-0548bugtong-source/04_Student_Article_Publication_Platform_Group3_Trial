@@ -4,6 +4,11 @@ import {
     AppBar,
     Avatar,
     Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     Divider,
     Drawer,
     IconButton,
@@ -15,6 +20,7 @@ import {
     Menu,
     MenuItem,
     Stack,
+    TextField,
     Toolbar,
     Typography,
     useMediaQuery,
@@ -28,16 +34,19 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import PublishIcon from '@mui/icons-material/Publish';
 import CommentIcon from '@mui/icons-material/Comment';
 import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SchoolIcon from '@mui/icons-material/School';
+import PeopleIcon from '@mui/icons-material/People';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 const DRAWER_WIDTH = 260;
 
 function getSidebarItems(roles) {
-    if (roles?.includes('writer')) {
+    if (roles?.includes('admin')) {
         return [
-            { label: 'Dashboard', href: route('writer.dashboard'), icon: <DashboardIcon />, active: route().current('writer.dashboard') },
-            { label: 'Create Article', href: route('articles.create'), icon: <AddCircleIcon />, active: route().current('articles.create') },
+            { label: 'Account Management', href: route('admin.dashboard'), icon: <PeopleIcon />, active: route().current('admin.dashboard') },
         ];
     }
     if (roles?.includes('editor')) {
@@ -45,27 +54,66 @@ function getSidebarItems(roles) {
             { label: 'Dashboard', href: route('editor.dashboard'), icon: <DashboardIcon />, active: route().current('editor.dashboard') },
         ];
     }
-    if (roles?.includes('student')) {
+
+    const hasStudent = roles?.includes('student');
+    const hasWriter = roles?.includes('writer');
+    const isOnWriterPage = route().current('writer.*') || route().current('articles.*');
+
+    // Dual role: show only the current section's items
+    if (hasStudent && hasWriter) {
+        if (isOnWriterPage) {
+            return [
+                { label: 'My Articles', href: route('writer.dashboard'), icon: <DashboardIcon />, active: route().current('writer.dashboard') },
+                { label: 'Create Article', href: route('articles.create'), icon: <AddCircleIcon />, active: route().current('articles.create') },
+            ];
+        }
         return [
             { label: 'Published Articles', href: route('student.dashboard'), icon: <ArticleIcon />, active: route().current('student.dashboard') },
+            { label: 'My Suggestions', href: route('student.suggestions'), icon: <LightbulbIcon />, active: route().current('student.suggestions') },
         ];
     }
+
+    if (hasStudent) {
+        return [
+            { label: 'Published Articles', href: route('student.dashboard'), icon: <ArticleIcon />, active: route().current('student.dashboard') },
+            { label: 'My Suggestions', href: route('student.suggestions'), icon: <LightbulbIcon />, active: route().current('student.suggestions') },
+        ];
+    }
+
+    if (hasWriter) {
+        return [
+            { label: 'My Articles', href: route('writer.dashboard'), icon: <DashboardIcon />, active: route().current('writer.dashboard') },
+            { label: 'Create Article', href: route('articles.create'), icon: <AddCircleIcon />, active: route().current('articles.create') },
+        ];
+    }
+
     return [
         { label: 'Dashboard', href: route('dashboard'), icon: <DashboardIcon />, active: route().current('dashboard') },
     ];
 }
 
 export default function AuthenticatedLayout({ header, children }) {
-    const { auth } = usePage().props;
+    const { auth, writerApplication } = usePage().props;
     const user = auth.user;
     const roles = user?.roles ?? [];
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [applyDialogOpen, setApplyDialogOpen] = useState(false);
+    const [writerReason, setWriterReason] = useState('');
+
+    const isStudent = roles.includes('student');
+    const isAlsoWriter = roles.includes('writer');
+    const canApply = isStudent && !isAlsoWriter;
+    const hasMultiRole = isStudent && isAlsoWriter;
+    const isOnStudentPage = route().current('student.*');
+    const isOnWriterPage = route().current('writer.*') || route().current('articles.*');
 
     const sidebarItems = getSidebarItems(roles);
-    const roleName = roles[0] ? roles[0].charAt(0).toUpperCase() + roles[0].slice(1) : 'User';
+    const roleName = roles.length > 0
+        ? roles.map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(' & ')
+        : 'User';
 
     const drawerContent = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -231,6 +279,27 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                                     Profile
                                 </MenuItem>
+                                {canApply && (
+                                    <MenuItem
+                                        onClick={() => { setAnchorEl(null); setApplyDialogOpen(true); }}
+                                        disabled={writerApplication?.status === 'pending'}
+                                    >
+                                        <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                        {writerApplication?.status === 'pending' ? 'Application Pending' : 'Become a Writer'}
+                                    </MenuItem>
+                                )}
+                                {hasMultiRole && isOnStudentPage && (
+                                    <MenuItem component={Link} href={route('writer.dashboard')}>
+                                        <ListItemIcon><SwapHorizIcon fontSize="small" /></ListItemIcon>
+                                        Switch to Writer
+                                    </MenuItem>
+                                )}
+                                {hasMultiRole && isOnWriterPage && (
+                                    <MenuItem component={Link} href={route('student.dashboard')}>
+                                        <ListItemIcon><SwapHorizIcon fontSize="small" /></ListItemIcon>
+                                        Switch to Student
+                                    </MenuItem>
+                                )}
                                 <Divider />
                                 <MenuItem onClick={() => router.post(route('logout'))}>
                                     <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
@@ -263,6 +332,43 @@ export default function AuthenticatedLayout({ header, children }) {
                     </Typography>
                 </Box>
             </Box>
+
+            {/* Become a Writer Dialog */}
+            {canApply && (
+                <Dialog open={applyDialogOpen} onClose={() => setApplyDialogOpen(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>Become a Writer</DialogTitle>
+                    <DialogContent>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Tell us why you'd like to become a writer. An admin will review your application.
+                        </Typography>
+                        <TextField
+                            autoFocus
+                            label="Why do you want to become a writer?"
+                            placeholder="Share your interests, expertise, or topics you'd like to write about..."
+                            multiline
+                            rows={3}
+                            fullWidth
+                            value={writerReason}
+                            onChange={(e) => setWriterReason(e.target.value)}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setApplyDialogOpen(false)}>Cancel</Button>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            disabled={!writerReason.trim()}
+                            onClick={() => {
+                                router.post(route('student.apply-writer'), { reason: writerReason }, {
+                                    onSuccess: () => { setApplyDialogOpen(false); setWriterReason(''); },
+                                });
+                            }}
+                        >
+                            Submit Application
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
         </Box>
     );
 }

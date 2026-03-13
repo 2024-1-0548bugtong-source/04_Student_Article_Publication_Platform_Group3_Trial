@@ -37,15 +37,24 @@ class RegisteredUserController extends Controller
             'role' => 'required|in:writer,editor,student',
         ]);
 
+        // Students are auto-approved; writers and editors need admin approval
+        $needsApproval = in_array($request->role, ['writer', 'editor']);
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_approved' => !$needsApproval,
         ]);
 
         $user->assignRole($request->role);
 
         event(new Registered($user));
+
+        if ($needsApproval) {
+            return redirect()->route('login')
+                ->with('status', 'Your account has been created and is pending admin approval. You will be able to log in once an administrator approves your account.');
+        }
 
         Auth::login($user);
 
